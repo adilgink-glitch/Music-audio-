@@ -1,0 +1,322 @@
+--// 515 MUSIC PLAYER
+--// Place inside StarterPlayer > StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- غيّر هذا إلى ID صورة الأنمي التي رفعتها على Roblox
+local IMAGE_ID = "rbxassetid://YOUR_IMAGE_ID"
+
+--// INTRO VOICE: Welcome to 515
+task.spawn(function()
+    local success, err = pcall(function()
+        local voice = Instance.new("AudioTextToSpeech")
+        voice.Parent = workspace
+        voice.Text = "Welcome to 515"
+        voice.VoiceId = "3"
+        voice.AutoLocalize = false
+        voice.Pitch = -3
+        voice.Speed = 0.85
+        voice.Volume = 1.2
+
+        local output = Instance.new("AudioDeviceOutput")
+        output.Parent = workspace
+
+        local wire = Instance.new("Wire")
+        wire.SourceInstance = voice
+        wire.TargetInstance = output
+        wire.Parent = workspace
+
+        local result = voice:LoadAsync()
+
+        if result == Enum.AssetFetchStatus.Success then
+            voice:Play()
+        end
+    end)
+
+    if not success then
+        warn("515 intro voice error:", err)
+    end
+end)
+
+--// GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "Music515"
+gui.ResetOnSpawn = false
+gui.Parent = playerGui
+
+local music = Instance.new("Sound")
+music.Name = "Music515Sound"
+music.Volume = 1
+music.Looped = true
+music.Parent = workspace
+
+--// Floating circle
+local circle = Instance.new("ImageButton")
+circle.Name = "515Circle"
+circle.Size = UDim2.fromOffset(72, 72)
+circle.Position = UDim2.new(1, -100, 0, 180)
+circle.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+circle.Image = IMAGE_ID
+circle.ScaleType = Enum.ScaleType.Crop
+circle.Rotation = -12
+circle.Parent = gui
+
+local circleCorner = Instance.new("UICorner")
+circleCorner.CornerRadius = UDim.new(1, 0)
+circleCorner.Parent = circle
+
+local circleStroke = Instance.new("UIStroke")
+circleStroke.Color = Color3.fromRGB(220, 0, 0)
+circleStroke.Thickness = 3
+circleStroke.Parent = circle
+
+--// 515 number
+local number = Instance.new("TextLabel")
+number.Size = UDim2.fromOffset(90, 25)
+number.Position = UDim2.new(0.5, -45, 0, -29)
+number.BackgroundTransparency = 1
+number.Text = "515"
+number.TextColor3 = Color3.fromRGB(255, 0, 0)
+number.TextStrokeTransparency = 0
+number.TextScaled = true
+number.Font = Enum.Font.GothamBlack
+number.Parent = circle
+
+--// Music window
+local frame = Instance.new("Frame")
+frame.Size = UDim2.fromOffset(310, 250)
+frame.Position = UDim2.new(0.5, -155, 0.5, -125)
+frame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+frame.Visible = false
+frame.Parent = gui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 14)
+frameCorner.Parent = frame
+
+local frameStroke = Instance.new("UIStroke")
+frameStroke.Color = Color3.fromRGB(210, 0, 0)
+frameStroke.Thickness = 2
+frameStroke.Parent = frame
+
+--// Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -50, 0, 45)
+title.Position = UDim2.fromOffset(10, 5)
+title.BackgroundTransparency = 1
+title.Text = "515 MUSIC PLAYER"
+title.TextColor3 = Color3.fromRGB(255, 0, 0)
+title.TextSize = 22
+title.Font = Enum.Font.GothamBlack
+title.Parent = frame
+
+--// Close button
+local close = Instance.new("TextButton")
+close.Size = UDim2.fromOffset(32, 32)
+close.Position = UDim2.new(1, -40, 0, 8)
+close.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+close.Text = "X"
+close.TextColor3 = Color3.new(1, 1, 1)
+close.Font = Enum.Font.GothamBold
+close.TextSize = 17
+close.Parent = frame
+
+Instance.new("UICorner", close).CornerRadius = UDim.new(0, 8)
+
+--// Search name box
+local searchBox = Instance.new("TextBox")
+searchBox.Size = UDim2.new(1, -30, 0, 38)
+searchBox.Position = UDim2.fromOffset(15, 65)
+searchBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+searchBox.PlaceholderText = "Music name (optional)"
+searchBox.Text = ""
+searchBox.TextColor3 = Color3.new(1, 1, 1)
+searchBox.PlaceholderColor3 = Color3.fromRGB(160, 160, 160)
+searchBox.TextSize = 14
+searchBox.Font = Enum.Font.Gotham
+searchBox.ClearTextOnFocus = false
+searchBox.Parent = frame
+
+Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0, 8)
+
+--// Audio ID box
+local idBox = Instance.new("TextBox")
+idBox.Size = UDim2.new(1, -30, 0, 38)
+idBox.Position = UDim2.fromOffset(15, 112)
+idBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+idBox.PlaceholderText = "Enter Roblox Audio ID"
+idBox.Text = ""
+idBox.TextColor3 = Color3.new(1, 1, 1)
+idBox.PlaceholderColor3 = Color3.fromRGB(160, 160, 160)
+idBox.TextSize = 14
+idBox.Font = Enum.Font.Gotham
+idBox.ClearTextOnFocus = false
+idBox.Parent = frame
+
+Instance.new("UICorner", idBox).CornerRadius = UDim.new(0, 8)
+
+--// Play button
+local play = Instance.new("TextButton")
+play.Size = UDim2.fromOffset(130, 40)
+play.Position = UDim2.fromOffset(15, 165)
+play.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+play.Text = "PLAY"
+play.TextColor3 = Color3.new(1, 1, 1)
+play.TextSize = 16
+play.Font = Enum.Font.GothamBold
+play.Parent = frame
+
+Instance.new("UICorner", play).CornerRadius = UDim.new(0, 8)
+
+--// Stop button
+local stop = Instance.new("TextButton")
+stop.Size = UDim2.fromOffset(130, 40)
+stop.Position = UDim2.fromOffset(165, 165)
+stop.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+stop.Text = "STOP"
+stop.TextColor3 = Color3.new(1, 1, 1)
+stop.TextSize = 16
+stop.Font = Enum.Font.GothamBold
+stop.Parent = frame
+
+Instance.new("UICorner", stop).CornerRadius = UDim.new(0, 8)
+
+--// Status
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, -20, 0, 25)
+status.Position = UDim2.fromOffset(10, 210)
+status.BackgroundTransparency = 1
+status.Text = "515 • Ready"
+status.TextColor3 = Color3.fromRGB(200, 200, 200)
+status.TextSize = 13
+status.Font = Enum.Font.Gotham
+status.Parent = frame
+
+--// Hide button
+local hide = Instance.new("TextButton")
+hide.Size = UDim2.fromOffset(85, 28)
+hide.Position = UDim2.new(1, -95, 1, -38)
+hide.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+hide.Text = "HIDE ICON"
+hide.TextColor3 = Color3.new(1, 1, 1)
+hide.TextSize = 11
+hide.Font = Enum.Font.GothamBold
+hide.Parent = frame
+
+Instance.new("UICorner", hide).CornerRadius = UDim.new(0, 7)
+
+--// Restore button
+local restore = Instance.new("TextButton")
+restore.Size = UDim2.fromOffset(42, 35)
+restore.Position = UDim2.new(1, -55, 0, 180)
+restore.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+restore.Text = "515"
+restore.TextColor3 = Color3.fromRGB(255, 0, 0)
+restore.TextSize = 15
+restore.Font = Enum.Font.GothamBlack
+restore.Visible = false
+restore.Parent = gui
+
+Instance.new("UICorner", restore).CornerRadius = UDim.new(0, 8)
+
+local restoreStroke = Instance.new("UIStroke")
+restoreStroke.Color = Color3.fromRGB(220, 0, 0)
+restoreStroke.Thickness = 2
+restoreStroke.Parent = restore
+
+--// Open and close
+circle.Activated:Connect(function()
+    frame.Visible = not frame.Visible
+end)
+
+close.Activated:Connect(function()
+    frame.Visible = false
+end)
+
+--// Hide and restore
+hide.Activated:Connect(function()
+    circle.Visible = false
+    restore.Visible = true
+    frame.Visible = false
+end)
+
+restore.Activated:Connect(function()
+    circle.Visible = true
+    restore.Visible = false
+end)
+
+--// Play and stop music
+play.Activated:Connect(function()
+    local id = idBox.Text:match("%d+")
+
+    if not id then
+        status.Text = "Enter a valid Audio ID!"
+        return
+    end
+
+    music:Stop()
+    music.SoundId = "rbxassetid://" .. id
+    status.Text = "Loading music..."
+
+    local success = pcall(function()
+        music:Play()
+    end)
+
+    if success then
+        status.Text = "Playing • 515"
+    else
+        status.Text = "Could not play this audio"
+    end
+end)
+
+stop.Activated:Connect(function()
+    music:Stop()
+    status.Text = "Music stopped"
+end)
+
+--// Drag circle on touch or mouse
+local dragging = false
+local dragStart
+local startPosition
+local moved = false
+
+circle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        dragging = true
+        moved = false
+        dragStart = input.Position
+        startPosition = circle.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (
+        input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch
+    ) then
+        local delta = input.Position - dragStart
+
+        if delta.Magnitude > 8 then
+            moved = true
+        end
+
+        circle.Position = UDim2.new(
+            startPosition.X.Scale,
+            startPosition.X.Offset + delta.X,
+            startPosition.Y.Scale,
+            startPosition.Y.Offset + delta.Y
+        )
+    end
+end)
